@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import org.kde.kdeconnect.plugins.Plugin
@@ -35,11 +36,13 @@ class DesignGalleryActivity : ComponentActivity() {
         val screen = intent.getStringExtra("screen") ?: "list"
         setContent {
             KdeTheme(this) {
-                Surface(Modifier.fillMaxSize()) {
+                Surface(Modifier.fillMaxSize().systemBarsPadding()) {
                     when (screen) {
                         "list" -> PairingScreen(uiState = sample(), onClick = {})
                         "empty" -> PairingScreen(uiState = sample().copy(connected = emptyList(), available = emptyList(), remembered = emptyList()), onClick = {})
                         "device" -> PluginsScreen(
+                            deviceName = "Pixel 9 Pro XL",
+                            deviceIcon = R.drawable.ic_device_phone_32dp,
                             pluginsWithButtons = buttons(),
                             pluginsNeedPermissions = emptyList(),
                             pluginsNeedOptionalPermissions = emptyList(),
