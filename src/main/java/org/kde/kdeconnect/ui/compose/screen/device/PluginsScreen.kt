@@ -6,10 +6,20 @@
 
 package org.kde.kdeconnect.ui.compose.screen.device
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import org.kde.kdeconnect.ui.compose.components.ModernCard
+import org.kde.kdeconnect.ui.compose.components.StatusPill
+import org.kde.kdeconnect.ui.compose.components.TonalAvatar
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,8 +64,12 @@ fun PluginsScreen(
     onButtonClick: (Plugin.PluginUiButton) -> Unit,
     actionNeedPermissions: (plugin: Plugin) -> Unit,
     actionNeedOptionalPermissions: (plugin: Plugin) -> Unit,
+    deviceName: String? = null,
+    deviceIcon: Int = 0,
 ) {
     PluginsScreenContent(
+        deviceName = deviceName,
+        deviceIcon = deviceIcon,
         pluginsWithButtons = pluginsWithButtons,
         pluginsNeedPermissions = pluginsNeedPermissions,
         pluginsNeedOptionalPermissions = pluginsNeedOptionalPermissions,
@@ -67,6 +81,8 @@ fun PluginsScreen(
 
 @Composable
 private fun PluginsScreenContent(
+    deviceName: String? = null,
+    deviceIcon: Int = 0,
     pluginsWithButtons: List<Plugin.PluginUiButton>,
     pluginsNeedPermissions: List<Plugin>,
     pluginsNeedOptionalPermissions: List<Plugin>,
@@ -83,6 +99,10 @@ private fun PluginsScreenContent(
                 .verticalScroll(state = rememberScrollState())
                 .padding(top = 16.dp, bottom = bottomPadding)
         ) {
+            if (deviceName != null) {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) { DeviceHeader(name = deviceName, icon = deviceIcon) }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
             val numColumns = LocalResources.current.getInteger(R.integer.plugins_columns)
 
             PluginButtons(
@@ -123,8 +143,8 @@ private fun PluginButtons(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 repeat(times = numColumns) {
                     if (buttonIter.hasNext()) {
@@ -144,32 +164,58 @@ private fun PluginButtons(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DeviceHeader(name: String, icon: Int) {
+    val cs = MaterialTheme.colorScheme
+    ModernCard(
+        container = cs.primaryContainer,
+        shape = MaterialTheme.shapes.extraLarge,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (icon > 0) {
+                TonalAvatar(iconRes = icon, size = 64.dp, container = cs.primary, tint = cs.onPrimary)
+                Spacer(Modifier.width(16.dp))
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = name, style = MaterialTheme.typography.headlineSmall, color = cs.onPrimaryContainer, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(8.dp))
+                StatusPill(
+                    text = stringResource(R.string.device_status_connected),
+                    container = cs.onPrimaryContainer.copy(alpha = 0.12f),
+                    content = cs.onPrimaryContainer,
+                    dot = true,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun PluginButton(
     button: Plugin.PluginUiButton,
     modifier: Modifier,
     onClick: () -> Unit
 ) {
-    Card(
-        shape = MaterialTheme.shapes.medium,
+    val cs = MaterialTheme.colorScheme
+    ModernCard(
         modifier = modifier.semantics { role = Role.Button },
-        onClick = onClick
+        onClick = onClick,
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
         ) {
-            Icon(
-                painter = painterResource(id = button.iconRes),
-                modifier = Modifier.padding(top = 12.dp),
-                contentDescription = null
-            )
+            TonalAvatar(iconRes = button.iconRes, size = 46.dp, container = cs.secondaryContainer, tint = cs.onSecondaryContainer)
             Text(
                 text = button.name,
+                style = MaterialTheme.typography.titleSmall,
+                color = cs.onSurface,
                 maxLines = 2,
                 minLines = 2,
-                fontSize = 18.sp,
                 overflow = TextOverflow.Ellipsis
             )
         }
@@ -182,21 +228,30 @@ private fun PluginsWithoutPermissions(
     plugins: Collection<Plugin>,
     action: (plugin: Plugin) -> Unit
 ) {
-    Text(
-        text = title,
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .semantics { heading() }
-    )
-    plugins.forEach { plugin ->
+    val cs = MaterialTheme.colorScheme
+    Column(modifier = Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = plugin.displayName,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { action(plugin) }
-                .padding(start = 28.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
-                .semantics { role = Role.Button }
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            color = cs.onSurfaceVariant,
+            modifier = Modifier.padding(start = 8.dp, top = 8.dp).semantics { heading() }
         )
+        plugins.forEach { plugin ->
+            ModernCard(
+                onClick = { action(plugin) },
+                modifier = Modifier.fillMaxWidth().semantics { role = Role.Button },
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TonalAvatar(iconRes = R.drawable.ic_warning, size = 38.dp, container = cs.errorContainer, tint = cs.onErrorContainer)
+                    Spacer(Modifier.width(12.dp))
+                    Text(text = plugin.displayName, style = MaterialTheme.typography.bodyLarge, color = cs.onSurface, modifier = Modifier.weight(1f))
+                    Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = cs.onSurfaceVariant)
+                }
+            }
+        }
     }
 }
 
@@ -215,6 +270,8 @@ private fun PluginsScreenPreview() {
         val pluginsWithoutOptionalPermissions = listOf(mprisPlugin, presenterPlugin)
 
         PluginsScreenContent(
+            deviceName = "Pixel 9 Pro XL",
+            deviceIcon = R.drawable.ic_device_phone_32dp,
             pluginsWithButtons = pluginsWithButtons.flatMap { plugin -> plugin.getUiButtons() },
             pluginsNeedPermissions = pluginsWithoutPermissions,
             pluginsNeedOptionalPermissions = pluginsWithoutOptionalPermissions,

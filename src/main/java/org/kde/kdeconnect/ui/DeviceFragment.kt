@@ -254,6 +254,8 @@ class DeviceFragment : BaseFragment<ActivityDeviceBinding>() {
                                         device.isPluginEnabled(plugin.pluginKey)
                                     }
                                 PluginsScreen(
+                                    deviceName = device.name,
+                                    deviceIcon = device.deviceType.toDrawableId(),
                                     pluginsWithButtons = pluginsWithButtons,
                                     pluginsNeedPermissions = pluginsNeedPermissions,
                                     pluginsNeedOptionalPermissions = pluginsNeedOptionalPermissions,
